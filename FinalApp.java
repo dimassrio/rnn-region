@@ -18,15 +18,17 @@ import javax.swing.table.*;
 import javax.swing.event.*;
 
 import java.awt.*;
+import java.awt.geom.*;
 import java.awt.event.*;
 
 import java.util.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 
+
+/**
+UI Class, designed to have only UI component inside it,
+*/
 public class FinalApp extends JApplet implements Runnable, ActionListener, MouseListener,MouseMotionListener , TableModelListener{
 	// Application Constant
 	public final static String WINDOWS_TITLE = "Reverse Nearest Neighbour dengan Region";
@@ -39,6 +41,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JScrollPane logPanel = new JScrollPane();
 	private FinalAppPanel appPanel = new FinalAppPanel(this);
 	private JPanel tablePanel = new JPanel();
+	public final static int MAX_X = 2000;
+	public final static int MAX_Y = 2000;
 	// Data Table Initialization
 	private final static String[] columnName = {"Point Name", "Point X", "Point Y"};
 	private DefaultTableModel dataModel = new DefaultTableModel(columnName, 0);
@@ -49,6 +53,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JButton newButton = new JButton("New");
 	private JButton processButton = new JButton("Process");
 	private JButton openButton = new JButton("Open");
+	private JButton saveButton = new JButton("Save");
 	// Status Panel Inialization
 	private String statusText = "Application Ready : ";
 	private JLabel statusLabel = new JLabel(statusText, JLabel.LEFT);
@@ -83,16 +88,30 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		setLayout(new BorderLayout());
 
 		JPanel buttonPanel = new JPanel();
+		newButton.setIcon(new ImageIcon("images/glyphicons_036_file.png"));
+		newButton.setIconTextGap(10);
 		buttonPanel.add(newButton);
+		openButton.setIcon(new ImageIcon("images/glyphicons_358_file_import.png"));
+		openButton.setIconTextGap(10);
 		buttonPanel.add(openButton);
+		opsiInit.setPreferredSize(new Dimension(50, 30));
 		buttonPanel.add(opsiInit);
+		processButton.setIcon(new ImageIcon("images/glyphicons_193_circle_ok.png"));
+		processButton.setIconTextGap(10);
 		buttonPanel.add(processButton);
+		saveButton.setIcon(new ImageIcon("images/glyphicons_359_file_export.png"));
+		saveButton.setIconTextGap(10);
+		buttonPanel.add(saveButton);
+		coordinateLabel.setPreferredSize(new Dimension(100, 50));
+		coordinateLabel.setText("( 0,0 )");
+		coordinateLabel.setIcon(new ImageIcon("images/glyphicons_233_direction.png"));
+		buttonPanel.add(this.createVerticalSeparator(3, 30));
 		buttonPanel.add(coordinateLabel);
 
 		JPanel statusPanel = new JPanel();
 		statusPanel.add(statusLabel);
 
-		appPanel.setPreferredSize(new Dimension(2000,2000));
+		appPanel.setPreferredSize(new Dimension(MAX_X,MAX_Y));
 		appPanel.setBackground(Color.white);
 
 		logText.setEditable(false);
@@ -102,6 +121,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		appPanel.addMouseMotionListener(this);
 		newButton.addActionListener(this);
 		openButton.addActionListener(this);
+		processButton.addActionListener(this);
+		saveButton.addActionListener(this);
 		// Main Panel set up
 		scrollPanel.setViewportView(appPanel);
 		dataPanel.setViewportView(dataTable);
@@ -116,24 +137,39 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		this.add(buttonPanel, "North");
 		this.add(statusPanel, "South");
 	}
+
 	public void actionPerformed(ActionEvent e){
+		JFileChooser fd = new JFileChooser();
+		
 		if (e.getSource()==newButton) {
 			appPanel.clearPoint();
 			appPanel.repaint();
 			dataModel.setDataVector(appPanel.pointContainer.getDataModel(), columnName);
 			statusText = "Panel cleared";
+			dataRefresh();
 		}else if(e.getSource()==openButton){
-			JFileChooser fd = new JFileChooser();
 			int returnVal = fd.showOpenDialog(this);
 
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File openFile = fd.getSelectedFile();
 				statusText = appPanel.openFile(openFile);
 			}
+			dataRefresh();
+		}else if(e.getSource()==saveButton){
+			int returnVal = fd.showSaveDialog(this);
+
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				File saveFile = fd.getSelectedFile();
+				statusText = appPanel.saveFile(saveFile);
+			}
+			dataRefresh();
+		}else if(e.getSource()==processButton){
+			appPanel.processPoint();
 		}
-		dataRefresh();
 	}
+
 	public void mouseClicked(MouseEvent e){}
+
 	public void mousePressed(MouseEvent e){
 		// Left Click Action
 		if (e.getButton() == e.BUTTON1) {
@@ -156,15 +192,18 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		}
 		dataRefresh();
 	}
+
 	public void mouseReleased(MouseEvent e){}
 	public void mouseEntered(MouseEvent e){}
 	public void mouseExited(MouseEvent e){}
+
 	public void mouseMoved(MouseEvent e){
 		if (e.getSource()!= appPanel) {
 			return;
 		}
 		coordinateLabel.setText("( "+e.getX()+" , "+e.getY()+" )");
 	}
+
 	public void mouseDragged(MouseEvent e){}
 	public void tableChanged(TableModelEvent e){}
 
@@ -184,26 +223,49 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	public void setStatusText(String data){
 		this.statusText = data;
 	}
+
+	public JComponent createVerticalSeparator(int width, int height) {  
+        JSeparator x = new JSeparator(SwingConstants.VERTICAL);  
+        x.setPreferredSize(new Dimension(width,height));  
+        return x;  
+    }
+
+    public JComboBox<String> getOpsi(){
+    	return this.opsiInit;
+    }
+
+    public JTextArea getLogText(){
+    	return this.logText;
+    }
 }
 
 /**
-PANEL GAMBAR
+UI Panel Class, all drawing related method is defined here.
 */
-
 class FinalAppPanel extends JPanel{
 	private static int pointRadius = 3;
 
 	private FinalApp controller;
 	private Graphics2D g;
 	public PointList pointContainer = new PointList();
-
+	public PointList vertexContainer = new PointList();
+	public LineList perpendicularList = new LineList();
+	public Path2D.Double polygon = null;
+	/**
+	* MVC initialization 
+	* @param controller of this panel
+	*/
 	public FinalAppPanel(FinalApp controller){
 		this.controller = controller;
 	}
-	// Point Manipulation
+	/**
+	* Adding point method, point based on mouse activity inside panel will be created and inserted in pointContainer variable,
+	* @param point created upon left click event.
+	*/
 	public void addPoint(PointExt point){
 		this.pointContainer.add(point);
 	}
+
 	public PointExt getPoint(double x, double y){
 		PointExt temp = new PointExt();
 		for(int i=0;i<pointContainer.size();i++){
@@ -250,6 +312,24 @@ class FinalAppPanel extends JPanel{
 
 	public void clearPoint(){
 		pointContainer.clear();
+		perpendicularList.clear();
+		vertexContainer.clear();
+		polygon = null;
+	}
+	//
+	public void processPoint(){
+		ProcessApp dataProcess = new ProcessApp();
+		controller.getLogText().append("Process Started ---------- !!\n");
+		dataProcess.setMax(controller.MAX_X, controller.MAX_Y);
+		dataProcess.setPointContainer(pointContainer);
+		String choice = (String) controller.getOpsi().getSelectedItem();
+		dataProcess.setQueryPoint(pointContainer.getPointByName(choice));
+		controller.getLogText().append("Query Point input : "+pointContainer.getPointByName(choice).printPoint()+"\n");
+		dataProcess.startProcess();
+		perpendicularList = dataProcess.getLine();
+		vertexContainer = dataProcess.getVertex();
+		polygon = dataProcess.getPolygon();
+		repaint();
 	}
 	// Draw Method
 	public void draw(PointExt point){
@@ -261,9 +341,27 @@ class FinalAppPanel extends JPanel{
 		}else{
 			g.setColor(Color.red);
 		}
-		g.fillOval(x-r, y-r, r+r, r+r);
-		g.setColor(Color.gray);
-		g.drawString(point.getName()+" ("+x+","+y+")",x,y);
+		if(point.getDraw()){
+			g.fillOval(x-r, y-r, r+r, r+r);
+			g.setColor(Color.gray);
+			g.drawString(point.getName()+" ("+x+","+y+")",x,y);
+		}
+	}
+
+	public void draw(LineExt line){
+		g.setColor(Color.blue);
+		int p1_x = (int) line.getP1().getX();
+		int p1_y = (int) line.getP1().getY();
+		int p2_x = (int) line.getP2().getX();
+		int p2_y = (int) line.getP2().getY();
+		g.drawLine(p1_x, p1_y, p2_x, p2_y);
+	}
+
+	public void draw(Path2D.Double polygon){
+		Color warna = new Color(62,173,255,130);
+		g.setColor(warna);
+		g.draw(polygon);
+		g.fill(polygon);
 	}
 
 	// Final Paint
@@ -275,9 +373,28 @@ class FinalAppPanel extends JPanel{
 				this.draw(pointContainer.get(i));
 			}
 		}
+
+		if (perpendicularList.size()>0) {
+			for (int i=0;i<perpendicularList.size() ;i++ ) {
+				this.draw(perpendicularList.get(i));
+			}
+		}
+
+		if (vertexContainer.size()>0) {
+			for (int i=0;i<vertexContainer.size() ;i++ ) {
+				this.draw(vertexContainer.get(i));
+			}
+		}
+		if (polygon!=null) {
+			this.draw(polygon);
+		}
 	}
 
-	// File Management
+	/**
+	* File Management
+	* Opening a txt or related file with a format name (x, y)
+	* @param file opened
+	*/
 	public String openFile(File of){
 		String data = "Load data from : "+of.getAbsolutePath();
 		try{
@@ -287,6 +404,32 @@ class FinalAppPanel extends JPanel{
 			data = "File "+of.getAbsolutePath()+" Loaded.";
 		}catch(FileNotFoundException ex){
 			data = "File "+of.getAbsolutePath()+" is not found. Please check again.";
+		}
+		return data;
+	}
+
+	public String saveFile(File of){
+		String data = "Save data to : "+of.getAbsolutePath();
+		try{
+			/*String content = "";*/
+
+			FileWriter fw = new FileWriter(of.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			for (PointExt p : this.pointContainer ) {
+				/*content = content+p.getName();
+				content = content+"("+p.getX()+","+p.getY()+")";
+				content = content+'\n';*/
+				bw.write(p.getName()+"("+p.getX()+","+p.getY()+")");
+				bw.newLine();
+			}
+
+			if (!of.exists()) {
+				of.createNewFile();
+			}
+			bw.close();
+		}
+		catch(IOException e){
+			e.printStackTrace();
 		}
 		return data;
 	}
@@ -333,7 +476,7 @@ class FinalAppPanel extends JPanel{
 				break;
 			}
 			if (number>=26) {
-				number /= 26;	
+					number /= 26;	
 				number -=1;			
 			}else{
 				number /= 26;
@@ -348,8 +491,20 @@ class FinalAppPanel extends JPanel{
 	public static void main(String[] args) {
 		
 	}
-}
 
+	public PointExt getPointByName(String name){
+		PointExt data = new PointExt();
+		for (int i=0;i<pointContainer.size() ;i++ ) {
+			if (name == pointContainer.get(i).getName()) {
+				data = pointContainer.get(i);
+			}
+		}
+		return data;
+	}
+}
+/**
+Popup UI Panel, binded to panel class, right click inside panel will activate popup.
+*/
 class PopUpDemo extends JPopupMenu implements ActionListener {
 	public FinalAppPanel controller;
 	public FinalApp ui;
@@ -393,5 +548,5 @@ class PopUpDemo extends JPopupMenu implements ActionListener {
 		boolean temp = this.show;
 		this.show = super.isShowing();
 		return temp;
-	}
+	}	
 }

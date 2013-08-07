@@ -2,6 +2,7 @@ import java.awt.geom.*;
 public class PointExt extends Point2D.Double {
 	public String name;
 	public boolean selected = false;
+	public boolean draw = true;
 
 	public PointExt(){
 		this.name = "";
@@ -56,6 +57,10 @@ public class PointExt extends Point2D.Double {
 		this.selected = status;
 	}
 
+	public boolean getDraw(){return this.draw;}
+	public void setDraw(boolean d){
+		this.draw = d;
+	}
 	public static void main(String[] args) {
 		
 	}

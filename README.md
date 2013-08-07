@@ -1,3 +1,14 @@
+Change 0.5
+- Complete first step logic implementation.
+- There's sometime a bug concerning the data that the vertex is not removed because its undetected as more far than a valid bisector - data-error-2.txt
+- Valid of offscreen vertex generation, trying to find the bug.
+
+Change 0.4
+- UI redesigned with glyphicons.
+- Bisector created.
+- Get intersection point between two lines.
+- Process class created.
+
 Change 0.3
 - Rebuild basic frame
 - Creating scrollable drawing plane
