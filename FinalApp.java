@@ -34,6 +34,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	public final static String WINDOWS_TITLE = "Reverse Nearest Neighbour dengan Region";
 	public final static int WINDOWS_WIDTH = 800;
 	public final static int WINDOWS_HEIGHT = 600;
+	// Change drawing orientation, true (0,0) at bottom-left or false for (0,0) at up-left
+	public final static boolean APP_ORI = false; 
 	// Main Panel Initialization
 	private JTabbedPane basePanel = new JTabbedPane();
 	private JScrollPane scrollPanel = new JScrollPane();
@@ -54,6 +56,9 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JButton processButton = new JButton("Process");
 	private JButton openButton = new JButton("Open");
 	private JButton saveButton = new JButton("Save");
+	private JCheckBox pointBox = new JCheckBox("point");
+	private JCheckBox lineBox = new JCheckBox("line");
+	private JCheckBox areaBox = new JCheckBox("area");
 	// Status Panel Inialization
 	private String statusText = "Application Ready : ";
 	private JLabel statusLabel = new JLabel(statusText, JLabel.LEFT);
@@ -102,7 +107,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		saveButton.setIcon(new ImageIcon("images/glyphicons_359_file_export.png"));
 		saveButton.setIconTextGap(10);
 		buttonPanel.add(saveButton);
-		coordinateLabel.setPreferredSize(new Dimension(100, 50));
+		coordinateLabel.setPreferredSize(new Dimension(200, 50));
 		coordinateLabel.setText("( 0,0 )");
 		coordinateLabel.setIcon(new ImageIcon("images/glyphicons_233_direction.png"));
 		buttonPanel.add(this.createVerticalSeparator(3, 30));
@@ -124,7 +129,12 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		processButton.addActionListener(this);
 		saveButton.addActionListener(this);
 		// Main Panel set up
-		scrollPanel.setViewportView(appPanel);
+		JViewport a = new JViewport();
+		a.setView(appPanel);
+		if (this.APP_ORI) {
+			a.setViewPosition(new Point(0, this.MAX_Y - this.WINDOWS_HEIGHT + 173));
+		}
+		scrollPanel.setViewport(a);
 		dataPanel.setViewportView(dataTable);
 		basePanel.add("Drawing Panel", scrollPanel);
 		basePanel.add("Data Panel", dataPanel);
@@ -177,7 +187,12 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 				if (e.getSource()!= appPanel) {
 					return;
 				}
-				PointExt inputPoint = new PointExt(appPanel.nextName(), e.getX(), e.getY());
+				PointExt inputPoint = null;
+				if (this.APP_ORI) {
+					inputPoint = new PointExt(appPanel.nextName(), e.getX(),this.MAX_Y - e.getY());	
+				}else{
+					inputPoint = new PointExt(appPanel.nextName(), e.getX(), e.getY());
+				}				
 					appPanel.addPoint(inputPoint);
 					statusText = "Point added : "+inputPoint.printPoint();
 					appPanel.repaint();
@@ -185,7 +200,12 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		}
 		// Right Click Action
 		else if(e.getButton() == e.BUTTON3){
-			PointExt temp = appPanel.getPoint(e.getX(), e.getY());
+			PointExt temp = null;
+			if (this.APP_ORI) {
+				temp = appPanel.getPoint(e.getX(), this.MAX_Y - e.getY());
+			}else{
+				temp = appPanel.getPoint(e.getX(), e.getY());
+			}
 			appPanel.changePointStatus(temp);
 			repaint();
 			appContext.show(appPanel, e.getX(), e.getY());
@@ -201,7 +221,11 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		if (e.getSource()!= appPanel) {
 			return;
 		}
-		coordinateLabel.setText("( "+e.getX()+" , "+e.getY()+" )");
+		if (this.APP_ORI) {
+			coordinateLabel.setText("( "+e.getX()+" , "+(this.MAX_Y - e.getY())+" )");
+		}else{
+			coordinateLabel.setText("( "+e.getX()+" , "+e.getY()+" )");
+		}
 	}
 
 	public void mouseDragged(MouseEvent e){}
@@ -251,6 +275,7 @@ class FinalAppPanel extends JPanel{
 	public PointList vertexContainer = new PointList();
 	public LineList perpendicularList = new LineList();
 	public Path2D.Double polygon = null;
+	public Polygon poly = null;
 	/**
 	* MVC initialization 
 	* @param controller of this panel
@@ -314,10 +339,20 @@ class FinalAppPanel extends JPanel{
 		pointContainer.clear();
 		perpendicularList.clear();
 		vertexContainer.clear();
+		poly = null;
 		polygon = null;
 	}
 	//
 	public void processPoint(){
+/*		int[] xpoint = new int[pointContainer.size()];
+		int[] ypoint = new int[pointContainer.size()];
+		int n = pointContainer.size();
+		for (int i = 0; i<pointContainer.size() ; i++ ) {
+			xpoint[i] = (int) pointContainer.get(i).getX();
+			ypoint[i] = (int) pointContainer.get(i).getY();
+		}
+		poly = new Polygon(xpoint, ypoint, n);	
+*/
 		ProcessApp dataProcess = new ProcessApp();
 		controller.getLogText().append("Process Started ---------- !!\n");
 		dataProcess.setMax(controller.MAX_X, controller.MAX_Y);
@@ -328,8 +363,12 @@ class FinalAppPanel extends JPanel{
 		dataProcess.startProcess();
 		perpendicularList = dataProcess.getLine();
 		vertexContainer = dataProcess.getVertex();
-		polygon = dataProcess.getPolygon();
+		poly = dataProcess.getPoly();
 		repaint();
+		/*AngleApp dataAngle = new AngleApp();
+		dataAngle.setPointList(pointContainer);
+		dataAngle.startProcess();*/
+
 	}
 	// Draw Method
 	public void draw(PointExt point){
@@ -344,8 +383,17 @@ class FinalAppPanel extends JPanel{
 		if(point.getDraw()){
 			g.fillOval(x-r, y-r, r+r, r+r);
 			g.setColor(Color.gray);
-			g.drawString(point.getName()+" ("+x+","+y+")",x,y);
-		}
+			if (controller.APP_ORI) {
+				g.rotate(Math.PI, x, y);
+				g.scale(-1.0, 1.0);
+				g.drawString(point.getName()+" ("+x+","+y+")",0-x,y);
+				g.scale(-1.0, 1.0);
+				g.rotate(-Math.PI, x, y);
+			}else{
+				g.drawString(point.getName()+" ("+x+","+y+")",x,y);
+			}
+			
+ 		}
 	}
 
 	public void draw(LineExt line){
@@ -364,10 +412,20 @@ class FinalAppPanel extends JPanel{
 		g.fill(polygon);
 	}
 
+	public void draw(Polygon poly){
+		Color warna = new Color(62,173,255,130);
+		g.setColor(warna);
+		g.fill(poly);
+/*		System.out.println("Polygon draw");
+*/	}
 	// Final Paint
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
 		this.g = (Graphics2D) g;
+		if (controller.APP_ORI) {
+			this.g.translate(0.0, controller.MAX_Y);  // Move the origin to the lower left
+			this.g.scale(1.0, -1.0); 
+		}
 		if (pointContainer.size()>0) {
 			for (int i=0;i<pointContainer.size() ;i++ ) {
 				this.draw(pointContainer.get(i));
@@ -387,6 +445,10 @@ class FinalAppPanel extends JPanel{
 		}
 		if (polygon!=null) {
 			this.draw(polygon);
+		}
+
+		if (poly != null) {
+			this.draw(poly);
 		}
 	}
 

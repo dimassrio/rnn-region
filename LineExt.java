@@ -11,6 +11,16 @@ class LineExt extends Line2D.Double {
 	public LineExt(){
 
 	}
+	public LineExt(Point2D a, PointExt b){
+		super(a.getX(), a.getY(), b.getX(), b.getY());
+		this.m = ((b.getY()-a.getY())/(b.getX()-a.getX()));
+	}
+
+	public LineExt(PointExt a, Point2D b){
+		super(a.getX(), a.getY(), b.getX(), b.getY());
+		this.m = ((b.getY()-a.getY())/(b.getX()-a.getX()));
+	}
+
 	public static void main(String[] args) {
 		
 	}

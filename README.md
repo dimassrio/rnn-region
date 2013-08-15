@@ -1,3 +1,12 @@
+Change 0.7
+- Finishing Implementation of Convex Hull Algorithm (Jarvis March)
+- Finishing Implementation of Preprocessing Algorithm (findPolygon)
+- Starting implementation of circle area
+- Kitchen sink of angle degree for testing implemented (AngleApp)
+
+Change 0.6
+- Rewriting of canvas coordinate system.
+
 Change 0.5
 - Complete first step logic implementation.
 - There's sometime a bug concerning the data that the vertex is not removed because its undetected as more far than a valid bisector - data-error-2.txt

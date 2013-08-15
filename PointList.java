@@ -3,6 +3,15 @@ import java.awt.geom.*;
 
 class PointList extends ArrayList<PointExt> {
 
+	public PointList(PointExt[] a){
+		for (int i=0;i<a.length ;i++ ) {
+			this.add(a[i]);
+		}
+	}
+	public PointList(){
+		super();
+	}
+
 	public static void main(String[] args) {
 			
 	}	
@@ -54,5 +63,13 @@ class PointList extends ArrayList<PointExt> {
 	public void add(String name, Point2D p){
 		PointExt data = new PointExt(name, p);
 		super.add(data);
+	}
+
+	public PointExt[] toArray(){
+		PointExt[] p = new PointExt[this.size()];
+		for (int i = 0;i<this.size();i++) {
+			p[i] = this.get(i);
+		}
+		return p;
 	}
 }
