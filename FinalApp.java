@@ -1,30 +1,15 @@
 /**
-REVERSE NEAREST NEIGHBOUR WITH REGION
-A THESIS FINAL PROJECT
-INSTITUT TEKNOLOGI TELKOM COMPUTER SCIENCE UNDER GRADUATE
-DIMAS SATRIO : http://dimassrio.com
-
-LICENSED UNDER ACADEMIC USE
-**/
-
-/**
 PROGRAM UTAMA
 */
-
-
 import javax.swing.JApplet;
 import javax.swing.*;
 import javax.swing.table.*;
 import javax.swing.event.*;
-
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.event.*;
-
 import java.util.*;
-
 import java.io.*;
-
 
 /**
 UI Class, designed to have only UI component inside it,
@@ -43,8 +28,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JScrollPane logPanel = new JScrollPane();
 	private FinalAppPanel appPanel = new FinalAppPanel(this);
 	private JPanel tablePanel = new JPanel();
-	public final static int MAX_X = 2000;
-	public final static int MAX_Y = 2000;
+	public final static int MAX_X = 500;
+	public final static int MAX_Y = 500;
 	// Data Table Initialization
 	private final static String[] columnName = {"Point Name", "Point X", "Point Y"};
 	private DefaultTableModel dataModel = new DefaultTableModel(columnName, 0);
@@ -55,6 +40,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JButton newButton = new JButton("New");
 	private JButton processButton = new JButton("Process");
 	private JButton openButton = new JButton("Open");
+	private JButton loadButton = new JButton("Load");
 	private JButton saveButton = new JButton("Save");
 	private JCheckBox pointBox = new JCheckBox("point");
 	private JCheckBox lineBox = new JCheckBox("line");
@@ -99,6 +85,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		openButton.setIcon(new ImageIcon("images/glyphicons_358_file_import.png"));
 		openButton.setIconTextGap(10);
 		buttonPanel.add(openButton);
+		buttonPanel.add(loadButton);
 		opsiInit.setPreferredSize(new Dimension(50, 30));
 		buttonPanel.add(opsiInit);
 		processButton.setIcon(new ImageIcon("images/glyphicons_193_circle_ok.png"));
@@ -126,6 +113,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		appPanel.addMouseMotionListener(this);
 		newButton.addActionListener(this);
 		openButton.addActionListener(this);
+		loadButton.addActionListener(this);
 		processButton.addActionListener(this);
 		saveButton.addActionListener(this);
 		// Main Panel set up
@@ -149,8 +137,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	}
 
 	public void actionPerformed(ActionEvent e){
-		JFileChooser fd = new JFileChooser();
-		
+		JFileChooser fd = new JFileChooser();	
 		if (e.getSource()==newButton) {
 			appPanel.clearPoint();
 			appPanel.repaint();
@@ -165,6 +152,11 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 				statusText = appPanel.openFile(openFile);
 			}
 			dataRefresh();
+		}else if(e.getSource()==loadButton){
+			Access a = new Access();
+			appPanel.setPointContainer(a.getData("peers", "limit 1000"));
+			dataRefresh();
+			repaint();
 		}else if(e.getSource()==saveButton){
 			int returnVal = fd.showSaveDialog(this);
 
@@ -301,6 +293,10 @@ class FinalAppPanel extends JPanel{
 		return temp;
 	}
 
+	public void setPointContainer(PointList a){
+		this.pointContainer = a;
+	}
+
 	public String removePointSelected(){
 		String data = "";
 		for (int i = 0;i<pointContainer.size() ;i++ ) {
@@ -344,26 +340,14 @@ class FinalAppPanel extends JPanel{
 	}
 	//
 	public void processPoint(){
-/*		int[] xpoint = new int[pointContainer.size()];
-		int[] ypoint = new int[pointContainer.size()];
-		int n = pointContainer.size();
-		for (int i = 0; i<pointContainer.size() ; i++ ) {
-			xpoint[i] = (int) pointContainer.get(i).getX();
-			ypoint[i] = (int) pointContainer.get(i).getY();
-		}
-		poly = new Polygon(xpoint, ypoint, n);	
-*/
-		ProcessApp dataProcess = new ProcessApp();
-		controller.getLogText().append("Process Started ---------- !!\n");
-		dataProcess.setMax(controller.MAX_X, controller.MAX_Y);
-		dataProcess.setPointContainer(pointContainer);
 		String choice = (String) controller.getOpsi().getSelectedItem();
-		dataProcess.setQueryPoint(pointContainer.getPointByName(choice));
+		ProcessApp dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
+		controller.getLogText().append("Process Started ---------- !!\n");
 		controller.getLogText().append("Query Point input : "+pointContainer.getPointByName(choice).printPoint()+"\n");
 		dataProcess.startProcess();
-		perpendicularList = dataProcess.getLine();
+		perpendicularList = dataProcess.getBisect();
 		vertexContainer = dataProcess.getVertex();
-		poly = dataProcess.getPoly();
+		poly = dataProcess.getPolygon();
 		repaint();
 		/*AngleApp dataAngle = new AngleApp();
 		dataAngle.setPointList(pointContainer);

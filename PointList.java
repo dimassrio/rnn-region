@@ -34,9 +34,11 @@ class PointList extends ArrayList<PointExt> {
 		return data;
 	}
 
-	public void printPoint(){
-		for (int i=0;i<this.size();i++) {
-			System.out.println(this.get(i).getName()+" ("+this.get(i).getX()+","+this.get(i).getY()+") "+this.get(i).distance(this.get(0)));
+	public void printPoint(boolean test){
+		if (test) {
+			for (int i=0;i<this.size();i++) {
+				System.out.println(this.get(i).getName()+" ("+this.get(i).getX()+","+this.get(i).getY()+") ");
+			}
 		}
 	}
 
