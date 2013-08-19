@@ -26,7 +26,6 @@ public class Access {
 			Scanner s = new Scanner(new BufferedReader(new FileReader("db-config.txt")));
 			while (s.hasNext()) {
 				String[] temp1 = s.nextLine().split(":");
-				System.out.println(temp1[1]);
 				if (temp1[0].equals("host")) {
 					host = temp1[1];
 				}else if (temp1[0].equals("name")) {
@@ -49,7 +48,7 @@ public class Access {
 			}
 		}
 		String url = "jdbc:mysql://"+host+":3306/"+name;
-		System.out.println(url);
+
 		try{
 			con = DriverManager.getConnection(url, user, password);
 		}

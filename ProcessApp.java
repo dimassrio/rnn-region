@@ -103,7 +103,15 @@ public class ProcessApp{
 
 		while(!initialRegion){
 			//System.out.println(bisectContainer.size());
-			if (bisectContainer.size()<3) {
+			if (sortedContainer.size()<4) {
+				for (int j=1;j<sortedContainer.size();j++ ) {
+					b = sortedContainer.get(j);
+					tempBisect = createBisector(a, b);
+					tempBisect.setName(b.getName());
+					bisectContainer.add(tempBisect);
+				}
+				break;
+			}else if (bisectContainer.size()<3) {
 				b = sortedContainer.get(i);
 				i++;
 				tempBisect = createBisector(a, b);
@@ -122,7 +130,7 @@ public class ProcessApp{
 			}else{
 				if (findClosedPolygon()) {
 					initialRegion = true;
-				}else{
+				}else if(i<sortedContainer.size()){
 					b = sortedContainer.get(i);
 					i++;
 					tempBisect = createBisector(a, b);
@@ -138,10 +146,13 @@ public class ProcessApp{
 					if (flag) {
 						bisectContainer.add(tempBisect);
 					}
+				}else{
+					break;
 				}
 				
 			}
 		}
+		System.out.println(initialRegion);
 	}
 	
 

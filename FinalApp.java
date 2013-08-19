@@ -17,8 +17,8 @@ UI Class, designed to have only UI component inside it,
 public class FinalApp extends JApplet implements Runnable, ActionListener, MouseListener,MouseMotionListener , TableModelListener{
 	// Application Constant
 	public final static String WINDOWS_TITLE = "Reverse Nearest Neighbour dengan Region";
-	public final static int WINDOWS_WIDTH = 800;
-	public final static int WINDOWS_HEIGHT = 600;
+	public final static int WINDOWS_WIDTH = 1000;
+	public final static int WINDOWS_HEIGHT = 1000;
 	// Change drawing orientation, true (0,0) at bottom-left or false for (0,0) at up-left
 	public final static boolean APP_ORI = false; 
 	// Main Panel Initialization
@@ -28,8 +28,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JScrollPane logPanel = new JScrollPane();
 	private FinalAppPanel appPanel = new FinalAppPanel(this);
 	private JPanel tablePanel = new JPanel();
-	public final static int MAX_X = 500;
-	public final static int MAX_Y = 500;
+	public final static int MAX_X = 1200;
+	public final static int MAX_Y = 1200;
 	// Data Table Initialization
 	private final static String[] columnName = {"Point Name", "Point X", "Point Y"};
 	private DefaultTableModel dataModel = new DefaultTableModel(columnName, 0);
@@ -154,7 +154,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 			dataRefresh();
 		}else if(e.getSource()==loadButton){
 			Access a = new Access();
-			appPanel.setPointContainer(a.getData("peers", "limit 1000"));
+			appPanel.setPointContainer(a.getData("peers10", "limit 1000"));
 			dataRefresh();
 			repaint();
 		}else if(e.getSource()==saveButton){

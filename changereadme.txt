@@ -1,3 +1,7 @@
+Change 0.85
+- Fixing forever loop because of false flag.
+- Fixing null exception because of sortedContainer is under the minimum number required.
+
 Change 0.8
 - SQL database implemented via load button
 - db-config.txt can be loaded for database directive
