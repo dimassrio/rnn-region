@@ -17,9 +17,8 @@ public class AngleApp{
 	}
 
 	public void startProcess(){
-		for (int i=1;i<this.getPointList().size() ; i++) {
-			System.out.println(findAngle(this.getPointList().get(0), this.getPointList().get(i)));
-		}
+		double angle = findAngle(pointData.get(0), pointData.get(1));
+		System.out.println(angle);
 	}
 
 	public double findAngle(double x1, double x2, double y1, double y2){

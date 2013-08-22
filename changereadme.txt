@@ -1,3 +1,7 @@
+Change 0.87
+- Minor Patch fixing the vertex generation algorithm
+- Implementing fail safe if forever loop happen when Jarvis March can find the maximum point
+
 Change 0.85
 - Fixing forever loop because of false flag.
 - Fixing null exception because of sortedContainer is under the minimum number required.

@@ -154,12 +154,11 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 			dataRefresh();
 		}else if(e.getSource()==loadButton){
 			Access a = new Access();
-			appPanel.setPointContainer(a.getData("peers10", "limit 1000"));
+			appPanel.setPointContainer(a.getData("peers10", "limit 10"));
 			dataRefresh();
 			repaint();
 		}else if(e.getSource()==saveButton){
 			int returnVal = fd.showSaveDialog(this);
-
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File saveFile = fd.getSelectedFile();
 				statusText = appPanel.saveFile(saveFile);

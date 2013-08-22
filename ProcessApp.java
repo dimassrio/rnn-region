@@ -61,8 +61,12 @@ public class ProcessApp{
 		this.sortPoint();
 		this.initialProcessing();
 		//System.out.println(vertexContainer.size());
-		//System.out.println(sortedVertex.size());
-		this.generatePolygon(sortedVertex);
+		//vertexContainer.printPoint(true);
+		if (initialRegion) {
+			this.generatePolygon(sortedVertex);						
+		}
+
+		
 	}
 	/**
 	PROCESSING
@@ -152,9 +156,8 @@ public class ProcessApp{
 				
 			}
 		}
-		System.out.println(initialRegion);
+		//System.out.println(initialRegion);
 	}
-	
 
 	public boolean findClosedPolygon(){
 		boolean closed = false;
@@ -223,14 +226,18 @@ public class ProcessApp{
 			addUsedPoint(usedPoint, minPoint);
 
 			currPoint = minPoint;
-			//System.out.println("2 minPoint ="+vertexContainer.get(minPoint).getName()+", maxPoint ="+vertexContainer.get(maxPoint).getName());
+			//System.out.println("2 minPoint ="+vertexContainer.get(minPoint).getName()+", maxPoint ="+vertexContainer.get(maxPoint).printPoint());
 			int j = 0;
-			while (currPoint!=maxPoint) {
-				//System.out.println(vertexContainer.get(currPoint).getName());
+			
+			while ((currPoint!=maxPoint)&&(j<vertexContainer.size())) {
+				//System.out.println(vertexContainer.get(currPoint).printPoint());
 				j++;
 				maxAngle = currPoint;
 				for (int i=0;i<vertexContainer.size();i++) {
 					if ((findAngle(vertexContainer.get(currPoint), vertexContainer.get(maxAngle))<findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))) && (notUsed(usedPoint, i) || i == maxPoint) && (findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))<=180)){
+						maxAngle = i;
+					}else if((vertexContainer.get(maxAngle).getY()==vertexContainer.get(i).getY())&&(vertexContainer.get(maxAngle).getX()<vertexContainer.get(i).getX())){
+						//System.out.println(vertexContainer.get(i).printPoint());
 						maxAngle = i;
 					}
 				}
@@ -252,6 +259,7 @@ public class ProcessApp{
 			}
 			sortedVertex.clear();
 			for (int i=0;i<usedPoint.length;i++) {
+				//System.out.println(usedPoint[i]);
 				sortedVertex.add(vertexContainer.get(usedPoint[i]));
 			}
 			//sortedVertex.printPoint(debug);
@@ -331,18 +339,92 @@ public class ProcessApp{
 						vertexContainer.add(name, p);
 					}
 				}else if(!checkParalel(bisectContainer.get(i), bisectContainer.get(j))){
-					PointExt[] p = new PointExt[2];
+					double x1 =  ((queryPoint.getY()-bisectContainer.get(i).getP1().getY())/bisectContainer.get(i).getM()) + bisectContainer.get(i).getP1().getX();
+					double x2 =  ((queryPoint.getY()-bisectContainer.get(j).getP1().getY())/bisectContainer.get(j).getM()) + bisectContainer.get(j).getP1().getX();
+					// check if point is within the line
+					if (((queryPoint.getX()>x1) && (queryPoint.getX()>x2)) || ((queryPoint.getX()<x1) && (queryPoint.getX()<x2))){
+						
+						
+					}else{
+						PointExt[] p = new PointExt[4];
 
-					p[0] = new PointExt(this.bisectContainer.get(i).getP1());
-					p[1] = new PointExt(this.bisectContainer.get(i).getP2());
+						p[0] = new PointExt(this.bisectContainer.get(i).getP1());
+						p[1] = new PointExt(this.bisectContainer.get(i).getP2());
+						p[2] = new PointExt(this.bisectContainer.get(j).getP1());
+						p[3] = new PointExt(this.bisectContainer.get(j).getP2());
+						//System.out.println(p[0].printPoint()+p[1].printPoint()+p[2].printPoint()+p[3].printPoint());
+						double[] d = new double[4];
+						if (p[0].getX()<p[2].getX()) {
+							//System.out.println("left");
+							// check upper side
+							d[0] = findAngle(p[0], p[1]);
+							//System.out.println("0 = "+d[0]);
+							d[1] = 180 - findAngle(p[2], p[3]);
+							//System.out.println("1 = "+d[1]);
+							// check lower side
+							d[2] = 180 - findAngle(p[0], p[1]);
+							//System.out.println("2 = "+d[2]);
+							d[3] = findAngle(p[2], p[3]);
+							//System.out.println("3 = "+d[3]);
+						}else{
+							//System.out.println("right");
+							// check upper side
+							d[0] = 180 - findAngle(p[0], p[1]);
+							//System.out.println(" 0= "+d[0]);
+							d[1] = findAngle(p[2], p[3]);
+							//System.out.println("1 = "+d[1]);
+							// check lower side
+							d[2] = findAngle(p[0], p[1]);
+							//System.out.println("2 = "+d[2]);
+							d[3] = 180 - findAngle(p[2], p[3]);
+							//System.out.println("3 = "+d[3]);
+						}
+						
+						if ((d[0]+d[1])>(d[2]+d[3])) {
+							if (!vertexContainer.contains(p[0])) {
+								vertexContainer.add(p[0]);
+							}
+							if (!vertexContainer.contains(p[2])) {
+								vertexContainer.add(p[2]);
+							}
+						}else{
+							if (!vertexContainer.contains(p[1])) {
+								vertexContainer.add(p[1]);
+							}
+							if (!vertexContainer.contains(p[3])) {
+								vertexContainer.add(p[3]);
+							}
+						}
+					}
 
-					LineExt l = new LineExt(p[0], this.queryPoint);
+					
+					// investigate left / right line position
+					/*if (bisectContainer.get(i).getM()<0) {
+						if (bisectContainer.get(j).getM()>bisectContainer.get(i).getM()) {
+							vertexContainer.add(p[0]);
+							vertexContainer.add(p[2]);
+						}else{
+							vertexContainer.add(p[1]);
+							vertexContainer.add(p[3]);
+						}
+					}else{
+						if (bisectContainer.get(j).getM()>bisectContainer.get(i).getM()) {
+							vertexContainer.add(p[1]);
+							vertexContainer.add(p[3]);
+						}else{
+							vertexContainer.add(p[0]);
+							vertexContainer.add(p[2]);
+						}
+					}*/
+					
+
+					/*LineExt l = new LineExt(p[0], this.queryPoint);
 					double[] d = new double[2];
 					d[0] = radianOfTwoLines(this.bisectContainer.get(i), l);
 					l = new LineExt(p[1], this.queryPoint);
 					d[1] = radianOfTwoLines(this.bisectContainer.get(i), l);
 					
-					if (d[0]<d[1]) {
+					if (d[0]>d[1]) {
 						if (!vertexContainer.contains(p[0])) {
 							vertexContainer.add(p[0]);
 						}
@@ -359,7 +441,7 @@ public class ProcessApp{
 					d[0] = radianOfTwoLines(this.bisectContainer.get(i), l);
 					l = new LineExt(p[1], this.queryPoint);
 					d[1] = radianOfTwoLines(this.bisectContainer.get(i), l);
-					if (d[0]<d[1]) {
+					if (d[0]>d[1]) {
 						if (!vertexContainer.contains(p[0])) {
 							vertexContainer.add(p[0]);
 						}
@@ -367,7 +449,7 @@ public class ProcessApp{
 						if (!vertexContainer.contains(p[1])) {
 							vertexContainer.add(p[1]);
 						}
-					}
+					}*/
 
 				}
 			}
