@@ -12,4 +12,10 @@ public class LineList extends ArrayList<LineExt> {
 		}
 		return false;
 	}
+
+	public void printPoint(){
+		for (LineExt line : this ) {
+			System.out.println(line.getName()+" "+line.vertex);
+		}
+	}
 }

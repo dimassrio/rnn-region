@@ -4,6 +4,8 @@ import java.awt.geom.*;
 class LineExt extends Line2D.Double {
 	private String name;
 	private double m;
+	public boolean show = true;
+	public int vertex;
 	public LineExt(PointExt a, PointExt b){
 		super(a.getX(), a.getY(), b.getX(), b.getY());
 		this.m = ((b.getY()-a.getY())/(b.getX()-a.getX()));
