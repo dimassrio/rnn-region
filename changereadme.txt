@@ -1,3 +1,7 @@
+Change 0.88
+- Implementing new way for vertex generation algorithm. Bisector now will extend line until intersection point is found.
+- Implementing safely guard for detecting valid vertex.
+
 Change 0.87
 - Minor Patch fixing the vertex generation algorithm
 - Implementing fail safe if forever loop happen when Jarvis March can find the maximum point

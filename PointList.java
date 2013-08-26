@@ -74,4 +74,21 @@ class PointList extends ArrayList<PointExt> {
 		}
 		return p;
 	}
+
+	public boolean checkExist(PointExt p){
+		boolean stat = false;
+		if (this.contains(p)) {
+			stat = true;
+		}else if (this.indexOf(p) != -1) {
+			stat = true;
+		}else {
+			for (PointExt z : this) {
+				if (p.getName().equals(z.getName())) {
+					stat = true;
+				}
+			}
+		}
+
+		return stat;
+	}
 }
