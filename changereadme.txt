@@ -1,6 +1,6 @@
-Change 0.88
-- Implementing new way for vertex generation algorithm. Bisector now will extend line until intersection point is found.
-- Implementing safely guard for detecting valid vertex.
+Change 0.9
+- Implementing EllipseExt as contact zone.
+- Implementing basic core of contact zone advanced processing.
 
 Change 0.87
 - Minor Patch fixing the vertex generation algorithm

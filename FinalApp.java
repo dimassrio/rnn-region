@@ -154,7 +154,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 			dataRefresh();
 		}else if(e.getSource()==loadButton){
 			Access a = new Access();
-			appPanel.setPointContainer(a.getData("peers10", "limit 10"));
+			appPanel.setPointContainer(a.getData("peers10", "limit 1000"));
 			dataRefresh();
 			repaint();
 		}else if(e.getSource()==saveButton){
@@ -267,6 +267,7 @@ class FinalAppPanel extends JPanel{
 	public LineList perpendicularList = new LineList();
 	public Path2D.Double polygon = null;
 	public Polygon poly = null;
+	public ArrayList<EllipseExt> contactZone = new ArrayList<EllipseExt>();
 	/**
 	* MVC initialization 
 	* @param controller of this panel
@@ -336,6 +337,7 @@ class FinalAppPanel extends JPanel{
 		vertexContainer.clear();
 		poly = null;
 		polygon = null;
+		contactZone.clear();
 	}
 	//
 	public void processPoint(){
@@ -347,6 +349,7 @@ class FinalAppPanel extends JPanel{
 		perpendicularList = dataProcess.getBisect();
 		vertexContainer = dataProcess.getVertex();
 		poly = dataProcess.getPolygon();
+		contactZone = dataProcess.getContactZone();
 		repaint();
 		/*AngleApp dataAngle = new AngleApp();
 		dataAngle.setPointList(pointContainer);
@@ -401,6 +404,16 @@ class FinalAppPanel extends JPanel{
 		g.fill(poly);
 /*		System.out.println("Polygon draw");
 */	}
+
+	public void draw(EllipseExt a){
+		Color warna = new Color(0,128,0);
+		g.setColor(warna);
+		int x = (int) a.getX();
+		int y = (int) a.getY();
+		int w = (int) a.getWidth();
+		int h = (int) a.getHeight();
+		g.drawOval(x,y,w,h);
+	}
 	// Final Paint
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
@@ -432,6 +445,12 @@ class FinalAppPanel extends JPanel{
 
 		if (poly != null) {
 			this.draw(poly);
+		}
+
+		if (contactZone.size()>0) {
+			for ( EllipseExt temp : contactZone ) {
+				this.draw(temp);
+			}
 		}
 	}
 
