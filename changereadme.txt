@@ -1,7 +1,3 @@
-Change 0.9
-- Implementing EllipseExt as contact zone.
-- Implementing basic core of contact zone advanced processing.
-
 Change 0.87
 - Minor Patch fixing the vertex generation algorithm
 - Implementing fail safe if forever loop happen when Jarvis March can find the maximum point

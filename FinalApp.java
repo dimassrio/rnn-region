@@ -204,6 +204,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		dataRefresh();
 	}
 
+	
+
 	public void mouseReleased(MouseEvent e){}
 	public void mouseEntered(MouseEvent e){}
 	public void mouseExited(MouseEvent e){}
