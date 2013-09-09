@@ -28,8 +28,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JScrollPane logPanel = new JScrollPane();
 	private FinalAppPanel appPanel = new FinalAppPanel(this);
 	private JPanel tablePanel = new JPanel();
-	public final static int MAX_X = 1200;
-	public final static int MAX_Y = 1200;
+	public final static int MAX_X = 1000;
+	public final static int MAX_Y = 1000;
 	// Data Table Initialization
 	private final static String[] columnName = {"Point Name", "Point X", "Point Y"};
 	private DefaultTableModel dataModel = new DefaultTableModel(columnName, 0);
@@ -42,6 +42,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JButton openButton = new JButton("Open");
 	private JButton loadButton = new JButton("Load");
 	private JButton saveButton = new JButton("Save");
+	private JButton autoButton = new JButton("Auto");
 	private JCheckBox pointBox = new JCheckBox("point");
 	private JCheckBox lineBox = new JCheckBox("line");
 	private JCheckBox areaBox = new JCheckBox("area");
@@ -53,6 +54,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JComboBox<String> opsiInit =  new JComboBox<String>();
 	// Contet Window
 	private PopUpDemo appContext = new PopUpDemo(appPanel, this);
+	private JLabel limitText = new JLabel("Limit Data : ");
+	private JTextField limitField = new JTextField(10);
 
 	public static void main(String[] args) {
 		// Stand Alone Application initialization
@@ -66,8 +69,6 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainWindow.add(app, "Center");
 		mainWindow.setVisible(true);
-
-
 	}
 
 	public void init(){
@@ -85,15 +86,18 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		openButton.setIcon(new ImageIcon("images/glyphicons_358_file_import.png"));
 		openButton.setIconTextGap(10);
 		buttonPanel.add(openButton);
+		buttonPanel.add(limitText);
+		buttonPanel.add(limitField);
 		buttonPanel.add(loadButton);
+		saveButton.setIcon(new ImageIcon("images/glyphicons_359_file_export.png"));
+		saveButton.setIconTextGap(10);
+		buttonPanel.add(saveButton);
 		opsiInit.setPreferredSize(new Dimension(50, 30));
 		buttonPanel.add(opsiInit);
 		processButton.setIcon(new ImageIcon("images/glyphicons_193_circle_ok.png"));
 		processButton.setIconTextGap(10);
 		buttonPanel.add(processButton);
-		saveButton.setIcon(new ImageIcon("images/glyphicons_359_file_export.png"));
-		saveButton.setIconTextGap(10);
-		buttonPanel.add(saveButton);
+		buttonPanel.add(autoButton);
 		coordinateLabel.setPreferredSize(new Dimension(200, 50));
 		coordinateLabel.setText("( 0,0 )");
 		coordinateLabel.setIcon(new ImageIcon("images/glyphicons_233_direction.png"));
@@ -116,6 +120,7 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		loadButton.addActionListener(this);
 		processButton.addActionListener(this);
 		saveButton.addActionListener(this);
+		autoButton.addActionListener(this);
 		// Main Panel set up
 		JViewport a = new JViewport();
 		a.setView(appPanel);
@@ -153,8 +158,12 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 			}
 			dataRefresh();
 		}else if(e.getSource()==loadButton){
+			String limit = limitField.getText();
+			if (limit.equals("")) {
+				limit = "1000";
+			}
 			Access a = new Access();
-			appPanel.setPointContainer(a.getData("peers10", "limit 1000"));
+			appPanel.setPointContainer(a.getData("peers10", "limit "+limit));
 			dataRefresh();
 			repaint();
 		}else if(e.getSource()==saveButton){
@@ -165,7 +174,14 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 			}
 			dataRefresh();
 		}else if(e.getSource()==processButton){
-			appPanel.processPoint();
+			appPanel.processPoint(false, "");
+		}else if(e.getSource() == autoButton){
+			fd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int returnVal = fd.showSaveDialog(this);
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				File saveFile = fd.getSelectedFile();
+				appPanel.processPoint(true, saveFile.getPath());
+			}
 		}
 	}
 
@@ -205,7 +221,6 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	}
 
 	
-
 	public void mouseReleased(MouseEvent e){}
 	public void mouseEntered(MouseEvent e){}
 	public void mouseExited(MouseEvent e){}
@@ -270,6 +285,7 @@ class FinalAppPanel extends JPanel{
 	public Path2D.Double polygon = null;
 	public Polygon poly = null;
 	public ArrayList<EllipseExt> contactZone = new ArrayList<EllipseExt>();
+	public ArrayList<Polygon> map = new ArrayList<Polygon>();
 	/**
 	* MVC initialization 
 	* @param controller of this panel
@@ -342,22 +358,69 @@ class FinalAppPanel extends JPanel{
 		contactZone.clear();
 	}
 	//
-	public void processPoint(){
-		String choice = (String) controller.getOpsi().getSelectedItem();
-		ProcessApp dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
-		controller.getLogText().append("Process Started ---------- !!\n");
-		controller.getLogText().append("Query Point input : "+pointContainer.getPointByName(choice).printPoint()+"\n");
-		dataProcess.startProcess();
-		perpendicularList = dataProcess.getBisect();
-		vertexContainer = dataProcess.getVertex();
-		poly = dataProcess.getPolygon();
-		contactZone = dataProcess.getContactZone();
-		repaint();
+	public void processPoint(boolean auto, String path){
+		if (auto) {
+			String choice;
+			ProcessApp dataProcess;
+			long time;
+			for (int i = 0; i< pointContainer.size(); i++) {
+				
+				time = System.currentTimeMillis();
+				choice = (String) controller.getOpsi().getItemAt(i);
+				dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
+				try{dataProcess.startProcess();}
+				catch(Exception e){
+					System.out.println(i + " Error");
+				}
+				//dataProcess.autoMode();
+				perpendicularList = dataProcess.getBisect();
+				vertexContainer = dataProcess.getVertex();
+				poly = dataProcess.getPolygon();
+				//map.add(dataProcess.getPolygon());
+				contactZone = dataProcess.getContactZone();
+				repaint();
+
+				//Rectangle screenRect = new Rectangle(java.awt.Toolkit.getNativeContainer(this));
+				java.awt.image.BufferedImage capture = null;
+				try{capture = createImage(this);}
+				catch(Exception e){System.out.println("error");}
+				String pathFile = path+"\\ss-"+i+".jpg";
+				try{javax.imageio.ImageIO.write(capture, "jpg", new File(pathFile));}
+				catch(Exception e){System.out.println("error");}
+				time = System.currentTimeMillis() - time;
+				System.out.println(i + ": " + time+" ms");
+			}		
+		}else{
+			String choice = (String) controller.getOpsi().getSelectedItem();
+			ProcessApp dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
+			controller.getLogText().append("Process Started ---------- !!\n");
+			controller.getLogText().append("Query Point input : "+pointContainer.getPointByName(choice).printPoint()+"\n");
+			dataProcess.startProcess();
+			//dataProcess.autoMode();
+			perpendicularList = dataProcess.getBisect();
+			vertexContainer = dataProcess.getVertex();
+			poly = dataProcess.getPolygon();
+			contactZone = dataProcess.getContactZone();
+			repaint();
+		}
+		
+
+		
+
 		/*AngleApp dataAngle = new AngleApp();
 		dataAngle.setPointList(pointContainer);
 		dataAngle.startProcess();*/
-
 	}
+
+	public java.awt.image.BufferedImage createImage(JPanel panel) {
+		int w = panel.getWidth();
+		int h = panel.getHeight();
+		java.awt.image.BufferedImage bi = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = bi.createGraphics();
+		panel.print(g);
+		return bi;
+	}
+
 	// Draw Method
 	public void draw(PointExt point){
 		int r = pointRadius;
@@ -403,7 +466,9 @@ class FinalAppPanel extends JPanel{
 	public void draw(Polygon poly){
 		Color warna = new Color(62,173,255,130);
 		g.setColor(warna);
-		g.fill(poly);
+		if (poly!=null) {
+			g.fill(poly);
+		}
 /*		System.out.println("Polygon draw");
 */	}
 
@@ -447,6 +512,12 @@ class FinalAppPanel extends JPanel{
 
 		if (poly != null) {
 			this.draw(poly);
+		}
+
+		if (map.size()>0) {
+			for (Polygon pol : map) {
+				this.draw(poly);
+			}
 		}
 
 		if (contactZone.size()>0) {

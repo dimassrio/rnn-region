@@ -1,3 +1,6 @@
+Change 0.93
+- Implementing jarvis march fix when detecting same angle
+
 Change 0.87
 - Minor Patch fixing the vertex generation algorithm
 - Implementing fail safe if forever loop happen when Jarvis March can find the maximum point

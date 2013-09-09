@@ -26,7 +26,7 @@ class LineExt extends Line2D.Double {
 		
 	}
 	public double getM(){
-		return this.m;
+		return ((this.getP2().getY()-this.getP1().getY())/(this.getP2().getX()-this.getP1().getX()));
 	}
 	public void setLine(PointExt a, PointExt b){
 		super.setLine(a.getX(), a.getY(), b.getX(), b.getY());

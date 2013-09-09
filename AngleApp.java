@@ -17,9 +17,7 @@ public class AngleApp{
 	}
 
 	public void startProcess(){
-		LineExt test = new LineExt(pointData.get(0), pointData.get(1));
-		double angle = test.getM();
-		System.out.println(angle);
+		System.out.println(findAngle(pointData.get(0), pointData.get(1)));
 	}
 
 	public double findAngle(double x1, double x2, double y1, double y2){

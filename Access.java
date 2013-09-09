@@ -52,7 +52,9 @@ public class Access {
 		try{
 			con = DriverManager.getConnection(url, user, password);
 		}
-		catch(SQLException e){}
+		catch(SQLException e){
+			System.out.println(e.getMessage());
+		}
 	}
 
 	public static void main(String[] args) {

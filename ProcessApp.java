@@ -66,19 +66,29 @@ public class ProcessApp{
 	*/
 	public void startProcess(){
 		this.sortPoint();
-
 		this.initialProcessing();
-		//System.out.println(bisectContainer.size());
-		//System.out.println("1");
 		this.advancedProcessing();
-		//System.out.println("2");
-		//System.out.println(vertexContainer.size());
-
 		if (initialRegion) {
 			this.generatePolygon(sortedVertex);						
 		}
+	}
 
-		
+	public void autoMode(){
+		long time = System.currentTimeMillis();
+		for (PointExt temp : pointContainer ) {
+			bisectContainer.clear();
+			vertexContainer.clear();
+			System.out.println(temp.getName());
+			this.queryPoint = temp;
+			this.sortPoint();
+			this.initialProcessing();
+			this.advancedProcessing();
+			if (initialRegion) {
+				this.generatePolygon(sortedVertex);
+			}
+		}
+		time = System.currentTimeMillis() - time;
+		System.out.println("Auto Mode Completed "+time);
 	}
 	/**
 	PROCESSING
@@ -221,11 +231,7 @@ public class ProcessApp{
 					if (checkLine.intersectsLine(bisect)) {
 
 						checkPoint = getIntersectionPoint(checkLine, bisect);
-						/*if (Double.isNaN(checkPoint.getX())) {
-							System.out.println("aCheck Point" + checkPoint.getX());	
-							System.out.println(bisect.getName());
-						}*/
-						
+						//System.out.println(checkLine.getP1()+":"+checkLine.getP2()+"-"+bisect.getName()+"|"+bisect.getP1()+":"+bisect.getP2());
 						double ax = this.roundDouble(checkPoint.getX());
 						double ay = this.roundDouble(checkPoint.getY());
 						double bx = this.roundDouble(temp.getX());
@@ -256,98 +262,22 @@ public class ProcessApp{
 				}
 			}
 			
-			/*System.out.println("===============");
-			vertexContainer.printPoint(true);*/
-			//System.out.println("1");
+
 			// Jarvis March
-			int currPoint = 0, minPoint = 0, maxPoint = 0, minAngle = 0, maxAngle = 0;
-			int[] usedPoint = new int[vertexContainer.size()];
-
-			for (int i=0;i<usedPoint.length;i++) {
-				usedPoint[i] = -1;
-			}
-
-			for (int i=0;i<vertexContainer.size();i++) {
-				if (vertexContainer.get(i).getY() < vertexContainer.get(minPoint).getY()){
-					minPoint = i;		
-				}
-			}
-
-			for (int i=0;i<vertexContainer.size();i++) {
-				if (vertexContainer.get(i).getY() > vertexContainer.get(maxPoint).getY()){
-					maxPoint = i;		
-				}
-			}			
-
-			addUsedPoint(usedPoint, minPoint);
-
-			currPoint = minPoint;
-		//	System.out.println("2 minPoint ="+vertexContainer.get(minPoint).getName()+", maxPoint ="+vertexContainer.get(maxPoint).printPoint());
-			int j = 0;
+			jarvisMarch();
 			
-			/*printArray(usedPoint);*/
-			while ((currPoint!=maxPoint)&&(j<vertexContainer.size())) {
-				//System.out.println(vertexContainer.get(currPoint).printPoint());
-				j++;
-				maxAngle = currPoint;
-				for (int i=0;i<vertexContainer.size();i++) {
-					if ((findAngle(vertexContainer.get(currPoint), vertexContainer.get(maxAngle))<findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))) && (notUsed(usedPoint, i) || i == maxPoint) && (findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))<=180)){
-						maxAngle = i;
-					}else if((vertexContainer.get(maxAngle).getY()==vertexContainer.get(i).getY())&&(vertexContainer.get(maxAngle).getX()<vertexContainer.get(i).getX())){
-						//System.out.println(vertexContainer.get(i).printPoint());
-						maxAngle = i;
-					}
-				}
-				currPoint = maxAngle;
-				addUsedPoint(usedPoint, currPoint);
-			}
-			currPoint = maxPoint;
-		//	System.out.println("3");
-			/*System.out.println("---------------");
-			printArray(usedPoint);*/
-			while(currPoint!=minPoint){
-				minAngle = minPoint;
-				/*System.out.println(vertexContainer.get(currPoint).getName());*/
-				for (int i = 0;i<vertexContainer.size();i++) {
-					//System.out.println(findAngle(vertexContainer.get(currPoint), vertexContainer.get(minAngle))+":"+findAngle(vertexContainer.get(currPoint), vertexContainer.get(i)));
-					if ((findAngle(vertexContainer.get(currPoint), vertexContainer.get(minAngle))<findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))) && (notUsed(usedPoint, i)) && (findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))>=180)){
-						minAngle = i;						
-					}
-				}
-				currPoint = minAngle;
-				addUsedPoint(usedPoint, currPoint);
-			}
-		//	System.out.println("4");
-			/*System.out.println("---------------");
-			printArray(usedPoint);*/
-			sortedVertex.clear();
-			/*System.out.println(sortedVertex.size()+" : "+usedPoint.length);*/
-			for (int i=0;i<usedPoint.length;i++) {
-				/*System.out.println(usedPoint[i]);*/
-				if (sortedVertex.indexOf(vertexContainer.get(usedPoint[i]))==-1) {
-					sortedVertex.add(vertexContainer.get(usedPoint[i]));
-				}
-			}
-			//System.out.println(sortedVertex.size());
 			for (LineExt tempBisect : bisectContainer ) {
 				tempBisect.vertex = 0;
 				for (PointExt tempPoint : sortedVertex ) {
-
-					//System.out.print(tempPoint.getName()+" on "+tempBisect.getName()+" - "+tempBisect.ptSegDist(tempPoint)+" | ");
-					//System.out.println(tempBisect.ptSegDist(tempPoint)<0.1d);
-
 					if (tempBisect.ptSegDist(tempPoint)<0.1d) {
-
 						tempBisect.vertex++;
-
 					}
 				}
 			}
-		//	System.out.println("5");
+		
 			LineList lineFlag = new LineList();
 			lineFlag.clear();
 			for (LineExt tempBisect : bisectContainer) {
-				//System.out.println(tempBisect.getName()+" : "+tempBisect.vertex);
 				if (tempBisect.vertex == 0) {
 					lineFlag.add(tempBisect);
 				}
@@ -358,7 +288,6 @@ public class ProcessApp{
 				bisectContainer.remove(del);
 			}
 			
-			//sortedVertex.printPoint(debug);
 			Path2D.Double path = new Path2D.Double();
 			path.moveTo(sortedVertex.get(0).getX(), sortedVertex.get(0).getY());
 			for (int i = 1; i<sortedVertex.size(); i++) {
@@ -369,7 +298,6 @@ public class ProcessApp{
 			boolean stat = true;
 			
 			for (LineExt tempBisect: bisectContainer ) {
-					//<S></S>ystem.out.println(tempBisect.getName());
 				visitedContainer.add(sortedContainer.getPointByName(tempBisect.getName()));
 				if (tempBisect.vertex<2) {
 					stat = false;
@@ -377,6 +305,9 @@ public class ProcessApp{
 			}
 			
 			if (path.contains(queryPoint)) {
+				if (sortedVertex.size()!=vertexContainer.size()) {
+					stat = false;
+				}
 				return stat;
 			}else{
 				stat = false;
@@ -412,6 +343,7 @@ public class ProcessApp{
 	*/
 
 	public void advancedProcessing() {
+		// Create Contact Zone
 		EllipseExt cz = new EllipseExt();
 		PointList peersExt = new PointList();
 		for (PointExt tempPoint : sortedVertex) {
@@ -427,9 +359,53 @@ public class ProcessApp{
 				}
 			}
 		}
-
+		// Sort point find
 		this.sortPoint(peersExt);
-		while (peersExt.size()>0) {
+		// Create bisector based on new point
+		if (peersExt.size()>50) {
+			while(peersExt.size()>0){
+				LineExt bisectLine;
+				PointExt temp = peersExt.get(0);
+				boolean stat = true;
+				bisectLine = createBisector(queryPoint, temp);
+				visitedContainer.add(temp);
+				bisectLine.setName(temp.getName());
+				for (LineExt tempLine :  bisectContainer) {
+					if (checkParalel(tempLine, bisectLine)) {
+						stat = false;
+						break;
+					}
+				}
+				if (stat){
+					bisectContainer.add(bisectLine);
+				}
+
+				peersExt.clear();
+				vertexContainer.clear();
+				// Generate temporary vertex candidate based on vertex
+				generateVertex();
+				// Check vertex validity, remove invalid candidate
+				verifyVertex();
+				// Convex hull processing.
+				jarvisMarch();
+				// Repeat contact zone generation
+				contactZone.clear();
+				for (PointExt tempPoint : sortedVertex) {
+					cz = new EllipseExt(tempPoint, queryPoint);
+					contactZone.add(cz);
+					for (PointExt checkPoint : sortedContainer) {
+						if (checkPoint!=queryPoint) {
+							if (cz.contains(checkPoint)) {
+								if (!visitedContainer.checkExist(checkPoint)) {
+									peersExt.add(checkPoint);
+								}
+							}	
+						}
+					}
+				}
+			}
+		}else{
+			while (peersExt.size()>0) {
 			LineExt bisectLine;
 			for (PointExt temp : peersExt ) {
 				boolean stat = true;
@@ -448,9 +424,13 @@ public class ProcessApp{
 			}
 			peersExt.clear();
 			vertexContainer.clear();
+			// Generate temporary vertex candidate based on vertex
 			generateVertex();
+			// Check vertex validity, remove invalid candidate
 			verifyVertex();
+			// Convex hull processing.
 			jarvisMarch();
+			// Repeat contact zone generation
 			contactZone.clear();
 			for (PointExt tempPoint : sortedVertex) {
 				cz = new EllipseExt(tempPoint, queryPoint);
@@ -465,8 +445,10 @@ public class ProcessApp{
 					}
 				}
 			}
+			
 		}
 
+		}
 		cleanBisector();
 	}
 
@@ -543,9 +525,9 @@ public class ProcessApp{
 	public void generateVertex(){
 		//System.out.println("================");
 		for (int i=0;i<bisectContainer.size();i++){
+			
 			for (int j=i+1; j<bisectContainer.size();j++){
 				if (bisectContainer.get(i).intersectsLine(bisectContainer.get(j))) {
-					
 					String name = "v("+bisectContainer.get(i).getName()+":"+bisectContainer.get(j).getName()+")";
 					PointExt p = new PointExt(name, getIntersectionPoint(bisectContainer.get(i), bisectContainer.get(j)));
 					if (Double.isNaN(p.getX())) {
@@ -555,6 +537,10 @@ public class ProcessApp{
 						vertexContainer.add(p);
 					}
 				}else if(!checkParalel(bisectContainer.get(i), bisectContainer.get(j))){
+					/*if (bisectContainer.get(i).getName().equals("334")&&bisectContainer.get(j).getName().equals("380")) {
+						System.out.println(bisectContainer.get(i).getP1()+":"+bisectContainer.get(i).getP2());
+						System.out.println(bisectContainer.get(j).getP1()+":"+bisectContainer.get(j).getP2());
+					}*/
 					boolean found = false;
 					double upx, upy, downx, downy, m, x1, y1;
 					double upix;
@@ -653,6 +639,134 @@ public class ProcessApp{
 		}
 	}
 
+	public void generateVertex2(){
+		//System.out.println("================");
+		for (int i=0;i<bisectContainer.size();i++){			
+			for (int j=i+1; j<bisectContainer.size();j++){
+				if ((i == 134)&&(j==164)) {
+					System.out.println(bisectContainer.get(i).getM() + ":"+ bisectContainer.get(j).getM());
+				}
+				if (bisectContainer.get(i).intersectsLine(bisectContainer.get(j))) {
+					if ((i == 134)&&(j==164)) {
+						System.out.println("intersect");
+					}
+					String name = "v("+bisectContainer.get(i).getName()+":"+bisectContainer.get(j).getName()+")";
+					PointExt p = new PointExt(name, getIntersectionPoint(bisectContainer.get(i), bisectContainer.get(j)));
+					if (Double.isNaN(p.getX())) {
+						System.out.println("nan detected "+bisectContainer.get(i).getP1()+":"+bisectContainer.get(i).getP2()+" | "+bisectContainer.get(j).getP1()+":"+bisectContainer.get(j).getP2());
+					}
+					if (!vertexContainer.checkExist(p)) {
+						vertexContainer.add(p);
+					}
+				}else if(!checkParalel(bisectContainer.get(i), bisectContainer.get(j))){
+					boolean found = false;
+					double upx, upy, downx, downy, m, x1, y1;
+					double upix;
+					double upiy, downix, downiy, upjx, upjy, downjx, downjy;
+					if ((i == 134)&&(j==164)) {
+						System.out.println(1);
+					}
+					if (bisectContainer.get(i).getM()==0) {
+						upix = bisectContainer.get(i).getP1().getX();
+						downix = bisectContainer.get(i).getP2().getX();
+						upiy = bisectContainer.get(i).getP1().getY();
+						downiy = bisectContainer.get(i).getP2().getY();
+					}else{
+						upix = 0;
+						downix = 0;
+						upiy = 0;
+						downiy = 0;
+					}
+
+					if (bisectContainer.get(j).getM()==0) {
+						upjx = bisectContainer.get(j).getP1().getX();
+						downjx = bisectContainer.get(j).getP2().getX();
+						upjy = bisectContainer.get(i).getP1().getY();
+						downjy = bisectContainer.get(i).getP2().getY();
+					}else{
+						upjx = 0;
+						downjx = 0;
+						upjy = 0;
+						downjy = 0;
+					}
+
+					upy = 0;
+					downy = maxY;
+					
+					if ((i == 134)&&(j==164)) {
+						System.out.println("2");
+					}
+
+					while(!found){
+						if (bisectContainer.get(i).getM()==0) {
+							if (upix < downix) {
+								upix = upix - maxX;
+								downix = downix + maxX;
+							}else{
+								upix = upix + maxX;
+								downix = downix - maxX;
+							}
+						}else{
+							m = bisectContainer.get(i).getM();
+							x1 = bisectContainer.get(i).getP1().getX();
+							y1 = bisectContainer.get(i).getP1().getY();
+							downiy = downiy + maxY;
+
+							downix = ((downiy-y1)/m)+x1;
+
+							m = bisectContainer.get(i).getM();
+							x1 = bisectContainer.get(i).getP2().getX();
+							y1 = bisectContainer.get(i).getP2().getY();
+							upiy = upiy - maxY;
+
+							upix = ((upiy-y1)/m)+x1;
+						}
+						bisectContainer.get(i).setLine(upix, upiy, downix, downiy);
+						// extend j
+
+						if (bisectContainer.get(j).getM()==0) {
+							if (upjx < downjx) {
+								upjx = upjx - maxX;
+								downjx = downjx + maxX;
+							}else{
+								upjx = upjx + maxX;
+								downjx = downjx - maxX;
+							}
+						}else{
+							m = bisectContainer.get(j).getM();
+							x1 = bisectContainer.get(j).getP1().getX();
+							y1 = bisectContainer.get(j).getP1().getY();
+							downjy = downjy + maxY;
+
+							downjx = ((downjy-y1)/m)+x1;
+
+							m = bisectContainer.get(j).getM();
+							x1 = bisectContainer.get(j).getP2().getX();
+							y1 = bisectContainer.get(j).getP2().getY();
+							upjy = upjy - maxY;
+
+							upjx = ((upjy-y1)/m)+x1;
+						}
+						bisectContainer.get(j).setLine(upjx, upjy, downjx, downjy);
+						if (bisectContainer.get(i).intersectsLine(bisectContainer.get(j))) {
+							found = true;
+						}
+					}
+					if ((i == 134)&&(j==164)) {
+						System.out.println("3");
+					}
+
+					String newName = "v("+bisectContainer.get(i).getName()+":"+bisectContainer.get(j).getName()+")";
+					PointExt newP = getIntersectionPoint(bisectContainer.get(i), bisectContainer.get(j));
+					newP.setName(newName);
+					if (!vertexContainer.checkExist(newP)) {
+						vertexContainer.add(newP);
+					}
+				}
+			}
+		}
+	}
+
 	public void verifyVertex(){
 		PointList flag = new PointList();
 			LineExt checkLine = null;
@@ -738,65 +852,63 @@ public class ProcessApp{
 	public void jarvisMarch(){
 			int currPoint = 0, minPoint = 0, maxPoint = 0, minAngle = 0, maxAngle = 0;
 			int[] usedPoint = new int[vertexContainer.size()];
-
 			for (int i=0;i<usedPoint.length;i++) {
 				usedPoint[i] = -1;
 			}
-
 			for (int i=0;i<vertexContainer.size();i++) {
 				if (vertexContainer.get(i).getY() < vertexContainer.get(minPoint).getY()){
 					minPoint = i;		
 				}
 			}
-
 			for (int i=0;i<vertexContainer.size();i++) {
 				if (vertexContainer.get(i).getY() > vertexContainer.get(maxPoint).getY()){
 					maxPoint = i;		
 				}
-			}			
-
-			addUsedPoint(usedPoint, minPoint);
-
-			currPoint = minPoint;
-			//System.out.println("2 minPoint ="+vertexContainer.get(minPoint).getName()+", maxPoint ="+vertexContainer.get(maxPoint).printPoint());
-			int j = 0;
+			}
 			
-			/*printArray(usedPoint);*/
-			while ((currPoint!=maxPoint)&&(j<vertexContainer.size())) {
-				//System.out.println(vertexContainer.get(currPoint).printPoint());
-				j++;
+			addUsedPoint(usedPoint, minPoint);
+			currPoint = minPoint;
+			int test = 0;
+			
+			while ((currPoint!=maxPoint)) {
 				maxAngle = currPoint;
 				for (int i=0;i<vertexContainer.size();i++) {
 					if ((findAngle(vertexContainer.get(currPoint), vertexContainer.get(maxAngle))<findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))) && (notUsed(usedPoint, i) || i == maxPoint) && (findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))<=180)){
 						maxAngle = i;
-					}else if((vertexContainer.get(maxAngle).getY()==vertexContainer.get(i).getY())&&(vertexContainer.get(maxAngle).getX()<vertexContainer.get(i).getX())){
-						//System.out.println(vertexContainer.get(i).printPoint());
-						maxAngle = i;
+					}else if ((findAngle(vertexContainer.get(currPoint), vertexContainer.get(maxAngle)) == findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))) && (notUsed(usedPoint, i) || i == maxPoint) && (findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))<=180)) {
+						if(vertexContainer.get(i).getX()<vertexContainer.get(maxAngle).getX()){
+							maxAngle = i;
+						}
 					}
 				}
 				currPoint = maxAngle;
 				addUsedPoint(usedPoint, currPoint);
 			}
 			currPoint = maxPoint;
-
 			while(currPoint!=minPoint){
+				
 				minAngle = minPoint;
 				for (int i = 0;i<vertexContainer.size();i++) {
 					if ((findAngle(vertexContainer.get(currPoint), vertexContainer.get(minAngle))<findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))) && (notUsed(usedPoint, i)) && (findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))>=180)){
 						minAngle = i;						
+					}else if ((findAngle(vertexContainer.get(currPoint), vertexContainer.get(minAngle))==findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))) && (notUsed(usedPoint, i)) && (findAngle(vertexContainer.get(currPoint), vertexContainer.get(i))>=180)) {
+						if(vertexContainer.get(i).getX()>vertexContainer.get(minAngle).getX()){
+							minAngle = i;
+						}
 					}
 				}
 				currPoint = minAngle;
 				addUsedPoint(usedPoint, currPoint);
 			}
-
 			sortedVertex.clear();
-			/*System.out.println(sortedVertex.size()+" : "+usedPoint.length);*/
+			
 			for (int i=0;i<usedPoint.length;i++) {
-				/*System.out.println(usedPoint[i]);*/
-				if (sortedVertex.indexOf(vertexContainer.get(usedPoint[i]))==-1) {
-					sortedVertex.add(vertexContainer.get(usedPoint[i]));
+				if (usedPoint[i]!=-1) {
+					if (sortedVertex.indexOf(vertexContainer.get(usedPoint[i]))==-1) {
+						sortedVertex.add(vertexContainer.get(usedPoint[i]));
+					}	
 				}
+				
 			}
 	}
 	/**
@@ -825,7 +937,7 @@ public class ProcessApp{
 		if (angle < 0) {
 			angle += 360.0;
 		}
-		return angle;
+		return roundDouble(angle);
 	}	
 
 	public double findAngle(PointExt p1, PointExt p2){
@@ -839,6 +951,8 @@ public class ProcessApp{
 
 	public boolean checkParalel(LineExt a, LineExt b){
 		if (a.getM() == b.getM()) {
+			return true;
+		}else if((a.getM() - b.getM()>-0.001)&&(a.getM() - b.getM()<0.001)){
 			return true;
 		}
 		return false;
@@ -857,5 +971,47 @@ public class ProcessApp{
 			System.out.println("] ");
 		}
 	}
+
+	public int turn(PointExt p, PointExt q, PointExt r){
+		double res = (q.getX() - p.getX())*(r.getY() - p.getY()) - (r.getX() - p.getX())*(q.getY()-p.getY());
+
+		if (res>0) {
+			return 1;
+		}else if(res<0){
+			return -1;
+		}else{
+			return 0;
+		}
+	}
+
+    public PointExt nextHull(PointList a, PointExt p){
+    	PointExt q = p;
+    	int t;
+    	for ( PointExt r : a ) {
+    		t = turn(p, q, r);
+    		if ((t == -1)||(t == 0) && (p.distanceSq(r) > p.distanceSq(q))) {
+    			q = r;
+    		}
+    	}
+    	return q;
+    }
+
+    public void jarvisMarch2(){
+    	PointExt minPoint = vertexContainer.get(0);
+    	for (PointExt temp : vertexContainer) {
+    		if (temp.getY() < minPoint.getY()){
+				minPoint = temp;
+			}
+    	}
+    	sortedVertex.add(minPoint);
+    	for (PointExt p : sortedVertex ) {
+    		PointExt q = nextHull(vertexContainer, p);
+    		if (q!=vertexContainer.get(0)) {
+    			if (sortedVertex.checkExist(q)) {
+    				sortedVertex.add(q);
+    			}
+    		}
+    	}
+    }
 	
 }
