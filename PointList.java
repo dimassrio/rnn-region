@@ -55,7 +55,7 @@ class PointList extends ArrayList<PointExt> {
 	public PointExt getPointByName(String a){
 		PointExt temp = null;
 		for (int i=0; i<this.size(); i++ ) {
-			if (this.get(i).getName()==a) {
+			if (this.get(i).getName().equals(a)) {
 				temp = this.get(i);
 			}
 		}
@@ -74,7 +74,17 @@ class PointList extends ArrayList<PointExt> {
 		}
 		return p;
 	}
-
+	public PointExt getNext(PointList visited){
+		PointExt result = new PointExt();
+		result = this.get(0);
+		for ( PointExt p : this ) {
+			if (!visited.checkExist(p)) {
+				result = p;
+				break;
+			}
+		}
+		return result;
+	}
 	public boolean checkExist(PointExt p){
 		boolean stat = false;
 		if (this.contains(p)) {
@@ -85,6 +95,11 @@ class PointList extends ArrayList<PointExt> {
 			for (PointExt z : this) {
 				if (p.getName().equals(z.getName())) {
 					stat = true;
+					break;
+				}
+				if (z.getX()==p.getX()&&z.getY()==p.getY()) {
+					stat = true;
+					break;
 				}
 			}
 		}

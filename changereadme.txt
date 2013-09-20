@@ -1,5 +1,5 @@
-Change 0.93
-- Implementing jarvis march fix when detecting same angle
+Change 1.0
+- Implemented CZ without Initial Region
 
 Change 0.87
 - Minor Patch fixing the vertex generation algorithm

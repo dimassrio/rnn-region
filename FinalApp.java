@@ -43,6 +43,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 	private JButton loadButton = new JButton("Load");
 	private JButton saveButton = new JButton("Save");
 	private JButton autoButton = new JButton("Auto");
+	private JButton czButton = new JButton("CZ");
+	private JButton czAutoButton = new JButton("CZ Auto");
 	private JCheckBox pointBox = new JCheckBox("point");
 	private JCheckBox lineBox = new JCheckBox("line");
 	private JCheckBox areaBox = new JCheckBox("area");
@@ -98,6 +100,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		processButton.setIconTextGap(10);
 		buttonPanel.add(processButton);
 		buttonPanel.add(autoButton);
+		buttonPanel.add(czButton);
+		buttonPanel.add(czAutoButton);
 		coordinateLabel.setPreferredSize(new Dimension(200, 50));
 		coordinateLabel.setText("( 0,0 )");
 		coordinateLabel.setIcon(new ImageIcon("images/glyphicons_233_direction.png"));
@@ -121,6 +125,8 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 		processButton.addActionListener(this);
 		saveButton.addActionListener(this);
 		autoButton.addActionListener(this);
+		czButton.addActionListener(this);
+		czAutoButton.addActionListener(this);
 		// Main Panel set up
 		JViewport a = new JViewport();
 		a.setView(appPanel);
@@ -181,6 +187,15 @@ public class FinalApp extends JApplet implements Runnable, ActionListener, Mouse
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File saveFile = fd.getSelectedFile();
 				appPanel.processPoint(true, saveFile.getPath());
+			}
+		}else if(e.getSource() == czButton){
+			appPanel.czProcess(false, "");
+		}else if(e.getSource() == czAutoButton){
+			fd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int returnVal = fd.showSaveDialog(this);
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				File saveFile = fd.getSelectedFile();
+				appPanel.czProcess(true, saveFile.getPath());
 			}
 		}
 	}
@@ -284,6 +299,7 @@ class FinalAppPanel extends JPanel{
 	public LineList perpendicularList = new LineList();
 	public Path2D.Double polygon = null;
 	public Polygon poly = null;
+	public Polygon prunn = null;
 	public ArrayList<EllipseExt> contactZone = new ArrayList<EllipseExt>();
 	public ArrayList<Polygon> map = new ArrayList<Polygon>();
 	/**
@@ -357,56 +373,93 @@ class FinalAppPanel extends JPanel{
 		polygon = null;
 		contactZone.clear();
 	}
+	public void czProcess(boolean auto, String path){
+		if(auto){
+			String choice;
+			ProcessApp dataProcess;
+			long time;
+			for (int i = 1; i<=pointContainer.size();i++ ) {
+				time = System.currentTimeMillis();
+				choice = (String) controller.getOpsi().getItemAt(i-1);
+				dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
+				try{dataProcess.czProcess();}
+				catch(Exception e){
+					controller.getLogText().append(i + " Error \n");
+				}
+				perpendicularList = dataProcess.getBisect();
+				vertexContainer = dataProcess.getVertex();
+				contactZone = dataProcess.getContactZone();
+				poly = dataProcess.getPolygon();
+				//prunn = dataProcess.getPrunningRegion();
+				repaint();
+				/*java.awt.image.BufferedImage capture = null;
+				try{capture = createImage(this);}
+				catch(Exception e){System.out.println("error");}
+				String pathFile = path+"\\ss-"+i+".jpg";
+				try{javax.imageio.ImageIO.write(capture, "jpg", new File(pathFile));}
+				catch(Exception e){System.out.println("error");}*/
+				time = System.currentTimeMillis() - time;
+				controller.getLogText().append(i + ": " + time+" ms \n");
+				//System.out.println(i+" processed : "+perpendicularList.size());
+			}
+		}else{
+			String choice;
+			ProcessApp dataProcess;
+			choice = (String) controller.getOpsi().getSelectedItem();
+			dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
+			dataProcess.czProcess();
+			perpendicularList = dataProcess.getBisect();
+			vertexContainer = dataProcess.getVertex();
+			contactZone = dataProcess.getContactZone();
+			poly = dataProcess.getPolygon();
+			prunn = dataProcess.getPrunningRegion();
+			repaint();
+		}
+	}
 	//
 	public void processPoint(boolean auto, String path){
 		if (auto) {
 			String choice;
 			ProcessApp dataProcess;
 			long time;
-			for (int i = 0; i< pointContainer.size(); i++) {
-				
-				time = System.currentTimeMillis();
-				choice = (String) controller.getOpsi().getItemAt(i);
-				dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
-				try{dataProcess.startProcess();}
-				catch(Exception e){
-					System.out.println(i + " Error");
+			int start = 0;
+			int limit = 10;
+				for (int i = 1; i<= pointContainer.size(); i++) {
+					time = System.currentTimeMillis();
+					choice = (String) controller.getOpsi().getItemAt(i-1);
+					dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
+					try{dataProcess.startProcess();}
+					catch(Exception e){
+						controller.getLogText().append(i + " Error \n");
+					}
+					perpendicularList = dataProcess.getBisect();
+					vertexContainer = dataProcess.getVertex();
+					poly = dataProcess.getPolygon();
+					contactZone = dataProcess.getContactZone();
+					repaint();
+					/*java.awt.image.BufferedImage capture = null;
+					try{capture = createImage(this);}
+					catch(Exception e){System.out.println("error");}
+					String pathFile = path+"\\ss-"+i+".jpg";
+					try{javax.imageio.ImageIO.write(capture, "jpg", new File(pathFile));}
+					catch(Exception e){System.out.println("error");}*/
+					time = System.currentTimeMillis() - time;
+					controller.getLogText().append(i + ": " + time+" ms \n");
 				}
-				//dataProcess.autoMode();
-				perpendicularList = dataProcess.getBisect();
-				vertexContainer = dataProcess.getVertex();
-				poly = dataProcess.getPolygon();
-				//map.add(dataProcess.getPolygon());
-				contactZone = dataProcess.getContactZone();
-				repaint();
-
-				//Rectangle screenRect = new Rectangle(java.awt.Toolkit.getNativeContainer(this));
-				java.awt.image.BufferedImage capture = null;
-				try{capture = createImage(this);}
-				catch(Exception e){System.out.println("error");}
-				String pathFile = path+"\\ss-"+i+".jpg";
-				try{javax.imageio.ImageIO.write(capture, "jpg", new File(pathFile));}
-				catch(Exception e){System.out.println("error");}
-				time = System.currentTimeMillis() - time;
-				System.out.println(i + ": " + time+" ms");
-			}		
+				start = start+limit;
+			
 		}else{
 			String choice = (String) controller.getOpsi().getSelectedItem();
 			ProcessApp dataProcess = new ProcessApp(pointContainer, pointContainer.getPointByName(choice), controller.MAX_X, controller.MAX_Y);
 			controller.getLogText().append("Process Started ---------- !!\n");
 			controller.getLogText().append("Query Point input : "+pointContainer.getPointByName(choice).printPoint()+"\n");
 			dataProcess.startProcess();
-			//dataProcess.autoMode();
 			perpendicularList = dataProcess.getBisect();
 			vertexContainer = dataProcess.getVertex();
 			poly = dataProcess.getPolygon();
 			contactZone = dataProcess.getContactZone();
 			repaint();
 		}
-		
-
-		
-
 		/*AngleApp dataAngle = new AngleApp();
 		dataAngle.setPointList(pointContainer);
 		dataAngle.startProcess();*/
@@ -441,7 +494,7 @@ class FinalAppPanel extends JPanel{
 				g.scale(-1.0, 1.0);
 				g.rotate(-Math.PI, x, y);
 			}else{
-				g.drawString(point.getName()+" ("+x+","+y+")",x,y);
+				g.drawString(point.getName(),x,y);
 			}
 			
  		}
@@ -471,6 +524,13 @@ class FinalAppPanel extends JPanel{
 		}
 /*		System.out.println("Polygon draw");
 */	}
+
+	public void draw(Polygon poly, Color warna){
+		g.setColor(warna);
+		if (poly!=null) {
+			g.fill(poly);
+		}
+	}
 
 	public void draw(EllipseExt a){
 		Color warna = new Color(0,128,0);
@@ -504,14 +564,17 @@ class FinalAppPanel extends JPanel{
 		if (vertexContainer.size()>0) {
 			for (int i=0;i<vertexContainer.size() ;i++ ) {
 				this.draw(vertexContainer.get(i));
-			}
+			} 
 		}
 		if (polygon!=null) {
 			this.draw(polygon);
 		}
-
 		if (poly != null) {
 			this.draw(poly);
+		}
+		if (prunn != null) {
+			Color warna = new Color(255,0,0,130);
+			this.draw(prunn, warna);
 		}
 
 		if (map.size()>0) {
@@ -687,3 +750,4 @@ class PopUpDemo extends JPopupMenu implements ActionListener {
 		return temp;
 	}	
 }
+
